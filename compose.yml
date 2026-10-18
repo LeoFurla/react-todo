@@ -13,12 +13,15 @@ services:
     command: ["node", "server/index.js"]
 
     env_file: .env
+    environment:
+      AVATARS_DIR: /avatars # named volume; /app is a read-only bind so the mount can't live under it
     depends_on:
       react-todo-db:
         condition: service_healthy
 
     volumes:
       - ./:/app:ro
+      - avatars:/avatars
 
     networks: [ai]
 
@@ -49,3 +52,5 @@ networks:
 volumes:
   pgdata:
     name: react-todo_pgdata
+  avatars:
+    name: react-todo_avatars

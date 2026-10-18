@@ -14,7 +14,7 @@ export async function authRoutes(app) {
         if (password.length < 4) throw httpError(400, 'password must be at least 4 characters');
         const existing = await db.select().from(users).where(eq(users.username, name)).execute();
         if (existing.length) throw httpError(409, 'username already taken');
-        const hash = bcrypt.hashSync(password, 10);
+        const hash = await bcrypt.hash(password, 10);
         const [row] = await db
             .insert(users)
             .values({ username: name, passwordHash: hash })
@@ -33,7 +33,7 @@ export async function authRoutes(app) {
             .from(users)
             .where(eq(users.username, username.trim()))
             .execute();
-        if (!rows.length || !bcrypt.compareSync(password, rows[0].passwordHash))
+        if (!rows.length || !await bcrypt.compare(password, rows[0].passwordHash))
             throw httpError(401, 'wrong username or password');
         setSessionCookie(reply, await issueSession(rows[0].id));
         return { id: rows[0].id, username: rows[0].username };

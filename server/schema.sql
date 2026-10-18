@@ -36,5 +36,6 @@ CREATE TABLE IF NOT EXISTS todo_tags (
     );
 
 ALTER TABLE todos ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
 CREATE INDEX IF NOT EXISTS idx_todos_user ON todos(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);

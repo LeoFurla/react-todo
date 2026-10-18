@@ -15,7 +15,7 @@ import CardBody from '../components/board/CardBody.jsx';
 import EditModal from '../components/board/EditModal.jsx';
 import TagManager from '../components/board/TagManager.jsx';
 
-export default function Board({ user, onLogout }) {
+export default function Board({ user, onLogout, onOpenProfile }) {
     const [todoMap, setTodoMap] = useState({});
     const [order, setOrder] = useState({ planned: [], started: [], completed: [] });
     const [tagList, setTagList] = useState([]);
@@ -177,6 +177,9 @@ export default function Board({ user, onLogout }) {
                         Manage tags
                     </button>
                     <span className="text-slate-500">{user.username}</span>
+                    <button onClick={onOpenProfile} className="text-slate-300 hover:text-white">
+                        Profile
+                    </button>
                     <button onClick={onLogout} className="text-slate-400 hover:text-white">
                         Log out
                     </button>
