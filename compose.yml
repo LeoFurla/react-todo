@@ -1,0 +1,51 @@
+name: react-todo
+
+# Deploy: upload this folder to /DATA/AppData/dev/react-todo, then
+#   docker run --rm -v "$PWD":/app -w /app node:20-alpine sh -c "npm install && npm run build"
+#   docker compose up -d
+
+services:
+  react-todo:
+    image: node:20-alpine
+    container_name: react-todo
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server/index.js"]
+
+    env_file: .env
+    depends_on:
+      react-todo-db:
+        condition: service_healthy
+
+    volumes:
+      - ./:/app:ro
+
+    networks: [ai]
+
+    ports:
+      - "0.0.0.0:8092:8092"
+
+  react-todo-db:
+    image: postgres:16-alpine
+    container_name: react-todo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: todos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: todos
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [ai]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todos -d todos"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+networks:
+  ai:
+    external: true
+
+volumes:
+  pgdata:
+    name: react-todo_pgdata

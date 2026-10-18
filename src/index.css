@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer components {
+    .input {
+        @apply w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500;
+    }
+    .btn-primary {
+        @apply rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50;
+    }
+    .btn-secondary {
+        @apply rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700;
+    }
+}
