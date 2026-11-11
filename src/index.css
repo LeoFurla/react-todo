@@ -10,4 +10,20 @@
     .btn-secondary {
         @apply rounded-lg bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700;
     }
+
+    /* DragOverlay entrance: fade + scale into the tilted resting state */
+    .drag-overlay-in {
+        animation: drag-overlay-in 160ms ease-out;
+    }
+}
+
+@keyframes drag-overlay-in {
+    from {
+        opacity: 0.6;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

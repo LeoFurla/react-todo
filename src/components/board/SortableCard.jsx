@@ -7,10 +7,13 @@ export default function SortableCard({ id, todo, tags, completed, onEdit, onDele
     return (
         <div
             ref={setNodeRef}
-            style={{ transform: CSS.Transform.toString(transform), transition }}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition: [transition, 'opacity 200ms ease'].filter(Boolean).join(', '),
+            }}
             {...attributes}
             {...listeners}
-            className={`touch-none ${isDragging ? 'opacity-30' : ''}`}
+            className={isDragging ? 'opacity-30' : ''}
         >
             <CardBody todo={todo} tags={tags} completed={completed} onClick={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} />
         </div>
