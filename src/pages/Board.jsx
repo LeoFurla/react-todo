@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     DndContext,
     DragOverlay,
-    PointerSensor,
+    MouseSensor,
+    TouchSensor,
     useSensor,
     useSensors,
     closestCorners,
@@ -97,7 +98,20 @@ export default function Board({ user, onLogout, onOpenProfile }) {
         return next;
     }
 
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+    // Mouse: instant drag (4 px). Touch: hold a card for 250 ms (finger
+    // within 8 px) to start dragging; quick swipes scroll instead. Two
+    // dedicated sensors are required — NOT PointerSensor alongside
+    // TouchSensor: PointerSensor also listens to touch pointers, and on
+    // touch pointerdown fires before touchstart, so the PointerSensor would
+    // always win the activation AND a touch-driven PointerSensor drag gets
+    // cancelled the moment the browser's native pan gesture takes over
+    // (pointercancel) once the finger moves. MouseSensor only listens to
+    // mousedown, so touch never triggers it. Quick taps/clicks never reach
+    // the 250 ms delay, so click-to-edit keeps working.
+    const sensors = useSensors(
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+        useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    );
 
     function handleDragStart(event) {
         setDragId(event.active.id);

@@ -25,7 +25,7 @@ export default function CardBody({ todo, tags, onClick, onDelete, onStatusChange
         <div
             onClick={onClick}
             className={`group relative cursor-pointer rounded-lg border bg-slate-800 p-3 shadow-sm ${
-                overlay ? 'rotate-2 border-sky-500 shadow-xl' : 'border-slate-700 hover:border-slate-500'
+                overlay ? 'drag-overlay-in rotate-2 border-sky-500 shadow-xl' : 'border-slate-700 hover:border-slate-500'
             }`}
         >
             <div className="flex items-start justify-between gap-2">
