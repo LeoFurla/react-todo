@@ -4,6 +4,13 @@ import { tags } from '../schema.js';
 import { httpError, authed } from '../http.js';
 
 export async function tagRoutes(app) {
+    app.get('/api/tags', async (request, reply) => {
+        const user = await authed(request, reply);
+        if (!user) return;
+        const rows = await db.select().from(tags).where(eq(tags.userId, user.id)).execute();
+        return rows.map((t) => ({ id: t.id, name: t.name }));
+    });
+
     app.post('/api/tags', async (request, reply) => {
         const user = await authed(request, reply);
         if (!user) return;

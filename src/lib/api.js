@@ -41,6 +41,7 @@ export const api = {
     updateTodo: (id, body) => request(`/api/todos/${id}`, { method: 'PATCH', body }),
     deleteTodo: (id) => request(`/api/todos/${id}`, { method: 'DELETE' }),
     reorder: (columns) => request('/api/reorder', { method: 'POST', body: columns }),
+    tags: () => request('/api/tags'),
     createTag: (name) => request('/api/tags', { method: 'POST', body: { name } }),
     renameTag: (id, name) => request(`/api/tags/${id}`, { method: 'PATCH', body: { name } }),
     deleteTag: (id) => request(`/api/tags/${id}`, { method: 'DELETE' }),
