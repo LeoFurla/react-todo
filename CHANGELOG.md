@@ -4,6 +4,17 @@ All notable changes to react-todo are documented here.
 
 > Releases before 2.0.0 are not documented individually - the git history was squashed into an initial commit.
 
+## [2.1.1] - 2026-11-11
+
+### Fixed
+- Mobile: touching a card and swiping started a drag instead of scrolling the page. Cards no longer use `touch-action: none`, so native touch scrolling works again.
+- Mobile: dragging now activates by **holding a card for 250 ms** (finger within 8 px); quick swipes scroll instead of dragging, and taps still open the edit modal.
+- Mobile: once a drag was active, moving the finger immediately cancelled it (the browser's native pan gesture took over via `pointercancel`). The `TouchSensor` now suppresses `touchmove` while dragging, so the gesture stays with the app.
+- Desktop: mouse drag activates instantly on click-move (4 px), as before - no hold required.
+
+### Changed
+- Drag & drop sensors replaced with `MouseSensor` + `TouchSensor`; the dragged card fades to 40% opacity and the drag preview animates in (fade + scale).
+
 ## [2.1.0] - 2026-10-18
 
 ### Added
