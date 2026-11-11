@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api.js';
+import Avatar from '../components/Avatar.jsx';
+import TagManager from '../components/board/TagManager.jsx';
 
 const USERNAME_RE = /^[A-Za-z0-9._]{2,30}$/;
 
@@ -13,14 +15,17 @@ function Field({ label, children }) {
 }
 
 export default function ProfilePage({ user, onBack, onUserChanged }) {
-    const [profile, setProfile] = useState(null);
     const [error, setError] = useState('');
 
     // avatar
-    const [avatarUrl, setAvatarUrl] = useState(null);
+    const [avatar, setAvatar] = useState(user.avatar);
     const fileRef = useRef(null);
     const [avatarBusy, setAvatarBusy] = useState(false);
     const [avatarMsg, setAvatarMsg] = useState('');
+
+    // tags
+    const [tags, setTags] = useState([]);
+    const [showTagManager, setShowTagManager] = useState(false);
 
     // username
     const [username, setUsername] = useState('');
@@ -36,11 +41,14 @@ export default function ProfilePage({ user, onBack, onUserChanged }) {
         api
             .profile()
             .then((p) => {
-                setProfile(p);
                 setUsername(p.username);
-                setAvatarUrl(api.avatarUrl(p.avatar));
+                setAvatar(p.avatar || null);
             })
             .catch((err) => setError(err.message));
+        api
+            .tags()
+            .then(setTags)
+            .catch(() => {});
     }, []);
 
     async function submitAvatar(e) {
@@ -54,7 +62,7 @@ export default function ProfilePage({ user, onBack, onUserChanged }) {
         setAvatarMsg('');
         try {
             const res = await api.uploadAvatar(file);
-            setAvatarUrl(api.avatarUrl(res.avatar));
+            setAvatar(res.avatar);
             setAvatarMsg('Saved');
             if (fileRef.current) fileRef.current.value = '';
         } catch (err) {
@@ -119,17 +127,24 @@ export default function ProfilePage({ user, onBack, onUserChanged }) {
             )}
 
             <div className="flex max-w-xl flex-col gap-4">
+                {/* tags */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                    <h2 className="mb-3 text-sm font-semibold text-slate-200">Tags</h2>
+                    {tags.length === 0 ? (
+                        <p className="mb-3 text-sm text-slate-500">No tags yet.</p>
+                    ) : (
+                        <p className="mb-3 text-sm text-slate-300">{tags.map((t) => `#${t.name}`).join('  ')}</p>
+                    )}
+                    <button className="btn-primary" onClick={() => setShowTagManager(true)}>
+                        Manage
+                    </button>
+                </div>
+
                 {/* avatar */}
                 <form onSubmit={submitAvatar} className="rounded-xl border border-slate-800 bg-slate-900 p-5">
                     <h2 className="mb-3 text-sm font-semibold text-slate-200">Profile picture</h2>
                     <div className="flex items-center gap-4">
-                        {avatarUrl ? (
-                            <img src={avatarUrl} alt="avatar" className="h-16 w-16 rounded-full object-cover" />
-                        ) : (
-                            <div className="grid h-16 w-16 place-items-center rounded-full bg-slate-800 text-xl text-slate-500">
-                                {(profile?.username || user.username).charAt(0).toUpperCase()}
-                            </div>
-                        )}
+                        <Avatar user={{ username: username || user.username, avatar }} />
                         <div>
                             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="block text-xs text-slate-400" />
                             {avatarMsg && <p className="mt-2 text-xs text-slate-400">{avatarMsg}</p>}
@@ -166,6 +181,25 @@ export default function ProfilePage({ user, onBack, onUserChanged }) {
                     </button>
                 </form>
             </div>
+
+            {showTagManager && (
+                <TagManager
+                    tags={tags}
+                    onAdd={async (name) => {
+                        await api.createTag(name);
+                        setTags(await api.tags());
+                    }}
+                    onRename={async (id, name) => {
+                        await api.renameTag(id, name);
+                        setTags(await api.tags());
+                    }}
+                    onDelete={async (id) => {
+                        await api.deleteTag(id);
+                        setTags(await api.tags());
+                    }}
+                    onClose={() => setShowTagManager(false)}
+                />
+            )}
         </div>
     );
 }

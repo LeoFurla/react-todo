@@ -33,7 +33,7 @@ export async function currentUser(request) {
     if (!rows.length) return null;
     const userRows = await db.select().from(users).where(eq(users.id, rows[0].userId)).execute();
     if (!userRows.length) return null;
-    return { id: userRows[0].id, username: userRows[0].username };
+    return { id: userRows[0].id, username: userRows[0].username, avatar: userRows[0].avatar || null };
 }
 
 export async function authed(request, reply) {

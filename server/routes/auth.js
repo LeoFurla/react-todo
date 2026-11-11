@@ -21,7 +21,7 @@ export async function authRoutes(app) {
             .returning()
             .execute();
         setSessionCookie(reply, await issueSession(row.id));
-        return { id: row.id, username: row.username };
+        return { id: row.id, username: row.username, avatar: row.avatar || null };
     });
 
     app.post('/api/login', async (request, reply) => {
@@ -36,7 +36,7 @@ export async function authRoutes(app) {
         if (!rows.length || !await bcrypt.compare(password, rows[0].passwordHash))
             throw httpError(401, 'wrong username or password');
         setSessionCookie(reply, await issueSession(rows[0].id));
-        return { id: rows[0].id, username: rows[0].username };
+        return { id: rows[0].id, username: rows[0].username, avatar: rows[0].avatar || null };
     });
 
     app.post('/api/logout', async (request, reply) => {

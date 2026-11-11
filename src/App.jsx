@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from './lib/api.js';
 import AuthPage from './pages/AuthPage.jsx';
 import Board from './pages/Board.jsx';
@@ -35,6 +35,13 @@ export default function App() {
         window.addEventListener('auth:expired', onExpired);
         return () => window.removeEventListener('auth:expired', onExpired);
     }, []);
+
+    // Picking up username/avatar changes made on the profile page
+    const prevView = useRef(view);
+    useEffect(() => {
+        if (prevView.current === 'profile' && view === 'board') api.me().then(setUser).catch(() => {});
+        prevView.current = view;
+    }, [view]);
 
     if (loading) {
         return <div className="grid min-h-screen place-items-center bg-slate-950 text-slate-400">Loading…</div>;

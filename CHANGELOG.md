@@ -4,6 +4,18 @@ All notable changes to react-todo are documented here.
 
 > Releases before 2.0.0 are not documented individually - the git history was squashed into an initial commit.
 
+## [2.2.0] - 2026-11-11
+
+### Added
+- Board topbar: round avatar button (uploaded avatar or first-letter placeholder) that opens the profile page, plus a logout icon button. On mobile the avatar sits on the title line; search and active tags move to the lines below.
+- Profile page: new **Tags** card listing the user's tags with a **Manage** button that opens the tag manager (add/rename/delete).
+- `GET /api/tags` endpoint returning the user's tag list.
+
+### Changed
+- `"Manage tags"`, username, `"Profile"` and `"Log out"` text buttons removed from the board topbar.
+- `avatar` field added to the `/api/me`, `/api/login` and `/api/register` responses so the board can render the avatar without an extra request.
+- The board re-reads the user (avatar, username) when returning from the profile page, so profile changes show up immediately.
+
 ## [2.1.1] - 2026-11-11
 
 ### Fixed

@@ -11,10 +11,10 @@ import {
 import { arrayMove } from '@dnd-kit/sortable';
 import { api } from '../lib/api.js';
 import { STATUSES } from '../lib/statuses.js';
+import Avatar from '../components/Avatar.jsx';
 import Column from '../components/board/Column.jsx';
 import CardBody from '../components/board/CardBody.jsx';
 import EditModal from '../components/board/EditModal.jsx';
-import TagManager from '../components/board/TagManager.jsx';
 
 export default function Board({ user, onLogout, onOpenProfile }) {
     const [todoMap, setTodoMap] = useState({});
@@ -23,7 +23,6 @@ export default function Board({ user, onLogout, onOpenProfile }) {
     const [search, setSearch] = useState('');
     const [selectedTags, setSelectedTags] = useState([]);
     const [editing, setEditing] = useState(null);
-    const [showTagManager, setShowTagManager] = useState(false);
     const [dragId, setDragId] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
@@ -170,9 +169,14 @@ export default function Board({ user, onLogout, onOpenProfile }) {
         <div className="min-h-screen bg-slate-950 p-4 text-slate-100 md:p-6">
             <header className="mb-4 flex flex-wrap items-center gap-3">
                 <h1 className="text-lg font-bold">TODO</h1>
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search todos…" className="input w-full sm:w-52" />
+                <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search todos…"
+                    className="input order-3 w-full sm:order-none sm:w-52"
+                />
                 {tagList.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="order-4 flex w-full flex-wrap items-center gap-1.5 sm:order-none sm:w-auto">
                         {tagList.map((t) => (
                             <button
                                 key={t.id}
@@ -186,16 +190,21 @@ export default function Board({ user, onLogout, onOpenProfile }) {
                         ))}
                     </div>
                 )}
-                <div className="ml-auto flex items-center gap-3 text-sm">
-                    <button onClick={() => setShowTagManager(true)} className="text-slate-300 hover:text-white">
-                        Manage tags
+                <div className="order-2 ml-auto flex items-center gap-2 sm:order-none">
+                    <button onClick={onOpenProfile} aria-label="Profile" title="Profile" className="shrink-0 transition-opacity hover:opacity-80">
+                        <Avatar user={user} className="h-9 w-9 text-sm" />
                     </button>
-                    <span className="text-slate-500">{user.username}</span>
-                    <button onClick={onOpenProfile} className="text-slate-300 hover:text-white">
-                        Profile
-                    </button>
-                    <button onClick={onLogout} className="text-slate-400 hover:text-white">
-                        Log out
+                    <button
+                        onClick={onLogout}
+                        aria-label="Log out"
+                        title="Log out"
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <path d="M16 17l5-5-5-5" />
+                            <path d="M21 12H9" />
+                        </svg>
                     </button>
                 </div>
             </header>
@@ -250,24 +259,6 @@ export default function Board({ user, onLogout, onOpenProfile }) {
                         load();
                         return t;
                     }}
-                />
-            )}
-            {showTagManager && (
-                <TagManager
-                    tags={tagList}
-                    onAdd={async (name) => {
-                        await api.createTag(name);
-                        load();
-                    }}
-                    onRename={async (id, name) => {
-                        await api.renameTag(id, name);
-                        load();
-                    }}
-                    onDelete={async (id) => {
-                        await api.deleteTag(id);
-                        load();
-                    }}
-                    onClose={() => setShowTagManager(false)}
                 />
             )}
         </div>
