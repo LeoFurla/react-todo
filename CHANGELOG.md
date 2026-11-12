@@ -4,6 +4,30 @@ All notable changes to react-todo are documented here.
 
 > Releases before 2.0.0 are not documented individually - the git history was squashed into an initial commit.
 
+## [3.0.0] - 2026-11-12
+
+Security and hardening release following the v2.2.0 project analysis. One breaking change: all existing sessions are invalidated — every user must log in once.
+
+### Added
+- Rate limiting: login max 10/min, register max 5/10 min (`@fastify/rate-limit`)
+- Registration gate: sign-ups only while `ALLOW_REGISTRATION=true`; the very first account can always be created
+- Shared account rules: username 2–30 chars `[A-Za-z0-9._]`, password 8–72 bytes — enforced identically by register, rename and password change
+- Todo field limits: title ≤ 200 chars, description ≤ 10 000 chars
+- Security headers via `@fastify/helmet` (CSP, nosniff, frame protection, referrer policy)
+- Nightly database backup: `scripts/backup.sh` (pg_dump, 14-day retention), cron 03:30, dumps in `/DATA/AppData/backups/react-todo`
+- API test suite: `npm test` (node --test, cross-user ownership rules; skips when `DATABASE_URL` is not set)
+
+### Changed (breaking)
+- Session tokens are stored as SHA-256 hashes; the raw token only lives in the cookie — pre-existing sessions stop working, log in once
+- Multi-stage Dockerfile on Node 22, unprivileged `node` runtime user; the frontend is baked into the image, so frontend changes now require `docker compose build && docker compose up -d`
+
+### Fixed
+- `PATCH /api/todos/:id` is atomic: tags are validated before writing, row update and tag replacement run in one transaction
+- Login timing no longer reveals whether a username exists (dummy-hash compare for unknown users)
+- A failed `/api/me` (e.g. network error) no longer kicks a valid session to the login page; only a 401 does
+- Unknown `/api/...` paths return a JSON 404 instead of the SPA index page
+- README: corrected API table (PATCH not PUT, missing tags/profile/avatar endpoints), deployment steps and env vars
+
 ## [2.2.0] - 2026-11-11
 
 ### Added
