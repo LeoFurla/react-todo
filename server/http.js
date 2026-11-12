@@ -5,6 +5,16 @@ import { sessions, users } from './schema.js';
 
 const SESSION_DAYS = 30;
 
+// Shared account rules — used by register and profile, so the two can
+// never drift apart again.
+export const USERNAME_RE = /^[A-Za-z0-9._]{2,30}$/;
+// bcrypt only uses the first 72 bytes; longer input is silently truncated
+export function validatePassword(p) {
+    if (typeof p !== 'string' || p.length < 8 || Buffer.byteLength(p) > 72) {
+        throw httpError(400, 'password must be 8 to 72 bytes');
+    }
+}
+
 export function httpError(status, message) {
     const e = new Error(message);
     e.statusCode = status;

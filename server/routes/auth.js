@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { users, sessions } from '../schema.js';
-import { httpError, issueSession, currentUser, setSessionCookie } from '../http.js';
+import { httpError, issueSession, currentUser, setSessionCookie, USERNAME_RE, validatePassword } from '../http.js';
 
 export async function authRoutes(app) {
     app.post('/api/register', { config: { rateLimit: { max: 5, timeWindow: '10 minutes' } } }, async (request, reply) => {
@@ -16,8 +16,9 @@ export async function authRoutes(app) {
         if (typeof username !== 'string' || typeof password !== 'string')
             throw httpError(400, 'username and password required');
         const name = username.trim();
-        if (name.length < 2) throw httpError(400, 'username must be at least 2 characters');
-        if (password.length < 4) throw httpError(400, 'password must be at least 4 characters');
+        if (!USERNAME_RE.test(name))
+            throw httpError(400, 'username must be 2-30 characters (letters, numbers, dot, underscore)');
+        validatePassword(password);
         const existing = await db.select().from(users).where(eq(users.username, name)).execute();
         if (existing.length) throw httpError(409, 'username already taken');
         const hash = await bcrypt.hash(password, 10);
