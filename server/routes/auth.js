@@ -5,7 +5,13 @@ import { users, sessions } from '../schema.js';
 import { httpError, issueSession, currentUser, setSessionCookie } from '../http.js';
 
 export async function authRoutes(app) {
-    app.post('/api/register', async (request, reply) => {
+    app.post('/api/register', { config: { rateLimit: { max: 5, timeWindow: '10 minutes' } } }, async (request, reply) => {
+        // Fail-closed: registration is open only while ALLOW_REGISTRATION=true.
+        // Bootstrap exception: the very first account can always be created.
+        if (process.env.ALLOW_REGISTRATION !== 'true') {
+            const any = await db.select({ id: users.id }).from(users).limit(1).execute();
+            if (any.length) throw httpError(403, 'registration is closed');
+        }
         const { username, password } = request.body ?? {};
         if (typeof username !== 'string' || typeof password !== 'string')
             throw httpError(400, 'username and password required');
@@ -24,7 +30,7 @@ export async function authRoutes(app) {
         return { id: row.id, username: row.username, avatar: row.avatar || null };
     });
 
-    app.post('/api/login', async (request, reply) => {
+    app.post('/api/login', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
         const { username, password } = request.body ?? {};
         if (typeof username !== 'string' || typeof password !== 'string')
             throw httpError(400, 'username and password required');
