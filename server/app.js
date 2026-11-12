@@ -15,7 +15,16 @@ export async function buildApp() {
     await app.register(fastifyMultipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
     // global: false — only routes with a rateLimit config get limited (login, register)
     await app.register(fastifyRateLimit, { global: false });
-    await app.register(fastifyHelmet); // CSP, X-Content-Type-Options, frame protection, …
+    // The site is plain HTTP over Tailscale, so helmet must not emit the
+    // HTTPS-only directives: upgrade-insecure-requests (CSP) would rewrite
+    // every subresource to https:// and silently kill the page, and HSTS
+    // would poison the origin for a year.
+    await app.register(fastifyHelmet, {
+        hsts: false,
+        crossOriginOpenerPolicy: false, // warning-only on non-https origins
+        originAgentCluster: false,
+        contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null } },
+    }); // CSP, X-Content-Type-Options, frame protection, …
 
     app.setErrorHandler((err, request, reply) => {
         const status = err.statusCode || 500;
