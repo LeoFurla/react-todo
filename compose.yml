@@ -1,26 +1,23 @@
 name: react-todo
 
-# Deploy: upload this folder to /DATA/AppData/dev/react-todo, then
-#   docker run --rm -v "$PWD":/app -w /app node:20-alpine sh -c "npm install && npm run build"
-#   docker compose up -d
+# Deploy: docker compose build && docker compose up -d
+# (frontend is baked into the image at build time; rebuild after frontend changes)
 
 services:
   react-todo:
-    image: node:20-alpine
+    build: .
     container_name: react-todo
     restart: unless-stopped
     working_dir: /app
-    command: ["node", "server/index.js"]
 
     env_file: .env
     environment:
-      AVATARS_DIR: /avatars # named volume; /app is a read-only bind so the mount can't live under it
+      AVATARS_DIR: /avatars # named volume; runtime user "node" owns it
     depends_on:
       react-todo-db:
         condition: service_healthy
 
     volumes:
-      - ./:/app:ro
       - avatars:/avatars
 
     networks: [ai]

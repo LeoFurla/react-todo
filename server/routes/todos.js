@@ -5,6 +5,8 @@ import { httpError, authed } from '../http.js';
 
 const STATUSES = ['planned', 'started', 'completed'];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_TITLE = 200;
+const MAX_DESCRIPTION = 10000;
 
 // dueDate arrives as 'YYYY-MM-DD' or null; pg may hand back DATE as Date or string
 function toDateString(v) {
@@ -73,6 +75,9 @@ export async function todoRoutes(app) {
         if (!user) return;
         const { title, description, status, tagIds, dueDate } = request.body ?? {};
         if (typeof title !== 'string' || !title.trim()) throw httpError(400, 'title required');
+        if (title.trim().length > MAX_TITLE) throw httpError(400, `title must be at most ${MAX_TITLE} characters`);
+        const cleanDescription = String(description ?? '').trim();
+        if (cleanDescription.length > MAX_DESCRIPTION) throw httpError(400, `description must be at most ${MAX_DESCRIPTION} characters`);
         const st = status ?? 'planned';
         if (!STATUSES.includes(st)) throw httpError(400, 'invalid status');
         const due = dueDate === undefined ? null : validateDueDate(dueDate);
@@ -88,7 +93,7 @@ export async function todoRoutes(app) {
             .values({
                 userId: user.id,
                 title: title.trim(),
-                description: String(description ?? '').trim(),
+                description: cleanDescription,
                 status: st,
                 position,
                 dueDate: due,
@@ -121,9 +126,14 @@ export async function todoRoutes(app) {
         const set = {};
         if (title !== undefined) {
             if (typeof title !== 'string' || !title.trim()) throw httpError(400, 'title required');
+            if (title.trim().length > MAX_TITLE) throw httpError(400, `title must be at most ${MAX_TITLE} characters`);
             set.title = title.trim();
         }
-        if (description !== undefined) set.description = String(description).trim();
+        if (description !== undefined) {
+            const cleanDescription = String(description).trim();
+            if (cleanDescription.length > MAX_DESCRIPTION) throw httpError(400, `description must be at most ${MAX_DESCRIPTION} characters`);
+            set.description = cleanDescription;
+        }
         if (status !== undefined) {
             if (!STATUSES.includes(status)) throw httpError(400, 'invalid status');
             if (status !== current.status) {
@@ -137,17 +147,22 @@ export async function todoRoutes(app) {
             }
         }
         if (dueDate !== undefined) set.dueDate = validateDueDate(dueDate);
-        if (Object.keys(set).length) {
-            set.updatedAt = new Date();
-            await db.update(todos).set(set).where(eq(todos.id, id)).execute();
-        }
-        if (tagIds !== undefined) {
-            const clean = await validateTagIds(user, tagIds);
-            await db.delete(todoTags).where(eq(todoTags.todoId, id)).execute();
-            for (const tagId of clean) {
-                await db.insert(todoTags).values({ todoId: id, tagId }).execute();
+        // Validate everything before writing, then apply in one transaction:
+        // a 400 must never leave a half-applied update, and a crash can't
+        // drop the tags while the row has already changed.
+        const clean = tagIds !== undefined ? await validateTagIds(user, tagIds) : null;
+        await db.transaction(async (tx) => {
+            if (Object.keys(set).length) {
+                set.updatedAt = new Date();
+                await tx.update(todos).set(set).where(and(eq(todos.id, id), eq(todos.userId, user.id))).execute();
             }
-        }
+            if (clean) {
+                await tx.delete(todoTags).where(eq(todoTags.todoId, id)).execute();
+                if (clean.length) {
+                    await tx.insert(todoTags).values(clean.map((tagId) => ({ todoId: id, tagId }))).execute();
+                }
+            }
+        });
         return { ok: true, id };
     });
 

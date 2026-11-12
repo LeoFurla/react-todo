@@ -5,7 +5,7 @@ import { eq, ne, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { users, sessions } from '../schema.js';
-import { httpError, authed } from '../http.js';
+import { httpError, authed, USERNAME_RE, validatePassword, hashToken } from '../http.js';
 
 const AVATARS_DIR = process.env.AVATARS_DIR || path.join(process.cwd(), 'data', 'avatars');
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
@@ -16,7 +16,6 @@ const IMAGE_TYPES = {
     'image/gif': '.gif',
 };
 const EXT_CONTENT_TYPES = Object.fromEntries(Object.entries(IMAGE_TYPES).map(([t, e]) => [e, t]));
-const USERNAME_RE = /^[A-Za-z0-9._]{2,30}$/;
 
 // Don't trust the client-sent mimetype: verify the payload against its magic bytes.
 function magicBytesMatch(buf, ext) {
@@ -73,7 +72,7 @@ export async function profileRoutes(app) {
         const { current, next } = request.body ?? {};
         if (typeof current !== 'string' || typeof next !== 'string')
             throw httpError(400, 'current and new password required');
-        if (next.length < 8) throw httpError(400, 'new password must be at least 8 characters');
+        validatePassword(next);
         const row = await fetchUser(user.id);
         // 400, not 401: the client maps 401 to "session expired" and force-logs-out
         if (!await bcrypt.compare(current, row.passwordHash))
@@ -83,7 +82,7 @@ export async function profileRoutes(app) {
         // A password change means the old secret is suspect: kill every session of
         // this user except the one making the request (stays logged in).
         await db.delete(sessions)
-            .where(and(eq(sessions.userId, user.id), ne(sessions.token, request.cookies.sid)))
+            .where(and(eq(sessions.userId, user.id), ne(sessions.token, hashToken(request.cookies.sid))))
             .execute();
         return { ok: true };
     });

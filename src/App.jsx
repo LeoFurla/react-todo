@@ -24,9 +24,13 @@ export default function App() {
     }, []);
 
     useEffect(() => {
+        // Only a 401 means "logged out" — a network blip must not kick a
+        // valid session to the login page.
         api.me()
             .then(setUser)
-            .catch(() => setUser(null))
+            .catch((err) => {
+                if (err && err.status === 401) setUser(null);
+            })
             .finally(() => setLoading(false));
     }, []);
 
