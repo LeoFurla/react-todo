@@ -1,5 +1,5 @@
 import { eq, and, gt } from 'drizzle-orm';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { db } from './db.js';
 import { sessions, users } from './schema.js';
 
@@ -21,10 +21,14 @@ export function httpError(status, message) {
     return e;
 }
 
+// Sessions are stored as SHA-256 hashes: reading the database must not be
+// enough to take over a live session. The raw token only lives in the cookie.
+export const hashToken = (t) => createHash('sha256').update(t).digest('hex');
+
 export async function issueSession(userId) {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 86400000);
-    await db.insert(sessions).values({ token, userId, expiresAt }).execute();
+    await db.insert(sessions).values({ token: hashToken(token), userId, expiresAt }).execute();
     return { token, expiresAt };
 }
 
@@ -38,7 +42,7 @@ export async function currentUser(request) {
     const rows = await db
         .select()
         .from(sessions)
-        .where(and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())))
+        .where(and(eq(sessions.token, hashToken(token)), gt(sessions.expiresAt, new Date())))
         .execute();
     if (!rows.length) return null;
     const userRows = await db.select().from(users).where(eq(users.id, rows[0].userId)).execute();

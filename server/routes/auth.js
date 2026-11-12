@@ -2,7 +2,10 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { users, sessions } from '../schema.js';
-import { httpError, issueSession, currentUser, setSessionCookie, USERNAME_RE, validatePassword } from '../http.js';
+import { httpError, issueSession, currentUser, setSessionCookie, USERNAME_RE, validatePassword, hashToken } from '../http.js';
+
+// Thrown-away hash used to equalize login timing for unknown users
+const DUMMY_HASH = await bcrypt.hash('timing-equalizer', 10);
 
 export async function authRoutes(app) {
     app.post('/api/register', { config: { rateLimit: { max: 5, timeWindow: '10 minutes' } } }, async (request, reply) => {
@@ -40,7 +43,10 @@ export async function authRoutes(app) {
             .from(users)
             .where(eq(users.username, username.trim()))
             .execute();
-        if (!rows.length || !await bcrypt.compare(password, rows[0].passwordHash))
+        // Always run a bcrypt compare — against a dummy hash for unknown
+        // users — so response timing does not reveal valid usernames.
+        const ok = await bcrypt.compare(password, rows[0]?.passwordHash ?? DUMMY_HASH);
+        if (!rows.length || !ok)
             throw httpError(401, 'wrong username or password');
         setSessionCookie(reply, await issueSession(rows[0].id));
         return { id: rows[0].id, username: rows[0].username, avatar: rows[0].avatar || null };
@@ -49,7 +55,7 @@ export async function authRoutes(app) {
     app.post('/api/logout', async (request, reply) => {
         const token = request.cookies.sid;
         if (token) {
-            await db.delete(sessions).where(eq(sessions.token, token)).execute();
+            await db.delete(sessions).where(eq(sessions.token, hashToken(token))).execute();
             reply.clearCookie('sid', { path: '/' });
         }
         return { ok: true };

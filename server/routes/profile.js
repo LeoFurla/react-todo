@@ -5,7 +5,7 @@ import { eq, ne, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { users, sessions } from '../schema.js';
-import { httpError, authed, USERNAME_RE, validatePassword } from '../http.js';
+import { httpError, authed, USERNAME_RE, validatePassword, hashToken } from '../http.js';
 
 const AVATARS_DIR = process.env.AVATARS_DIR || path.join(process.cwd(), 'data', 'avatars');
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
@@ -82,7 +82,7 @@ export async function profileRoutes(app) {
         // A password change means the old secret is suspect: kill every session of
         // this user except the one making the request (stays logged in).
         await db.delete(sessions)
-            .where(and(eq(sessions.userId, user.id), ne(sessions.token, request.cookies.sid)))
+            .where(and(eq(sessions.userId, user.id), ne(sessions.token, hashToken(request.cookies.sid))))
             .execute();
         return { ok: true };
     });
