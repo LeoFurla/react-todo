@@ -19,7 +19,8 @@ const MIME = {
 export async function staticRoutes(app) {
     app.get('/*', async (request, reply) => {
         const raw = request.params['*'] ?? '';
-        if (raw.startsWith('/api/')) return reply.code(404).send({ error: 'not found' });
+        // Fastify wildcard values carry no leading slash
+        if (raw === 'api' || raw.startsWith('api/')) return reply.code(404).send({ error: 'not found' });
         let rel;
         try {
             rel = decodeURIComponent(raw).replace(/^\/+/, '');

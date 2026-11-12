@@ -17,7 +17,9 @@ async function request(path, options = {}) {
         if (res.status === 401 && !/\/api\/(login|register)$/.test(path)) {
             window.dispatchEvent(new Event('auth:expired'));
         }
-        throw new Error((data && data.error) || `HTTP ${res.status}`);
+        const err = new Error((data && data.error) || `HTTP ${res.status}`);
+        err.status = res.status;
+        throw err;
     }
     return data;
 }
