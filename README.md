@@ -89,4 +89,8 @@ Limits: title ≤ 200 chars, description ≤ 10 000 chars, username 2–30 chars
 
 - `.env` is gitignored and contains a live DB password — never commit it.
 - Data lives in the named volume `react-todo_pgdata`; nightly dumps go to `/DATA/AppData/backups/react-todo` (`scripts/backup.sh`, 14-day retention).
+- Upgrading from 2.x: the pre-existing `react-todo_avatars` volume is root-owned, and the app now runs unprivileged — chown it once so avatar uploads keep working:
+  ```sh
+  docker run --rm -v react-todo_avatars:/av alpine chown -R 1000:1000 /av
+  ```
 - API tests: point `DATABASE_URL` at a scratch Postgres, then `npm test`.

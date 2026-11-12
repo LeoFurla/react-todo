@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Nightly dump of the react-todo Postgres database (run from cron).
 # Backups land in /DATA/AppData/backups/react-todo, 14-day retention.
-set -eu
+set -euo pipefail   # a mid-stream pg_dump failure must not yield a truncated .gz
 
 BACKUP_DIR=/DATA/AppData/backups/react-todo
 STAMP=$(date +%F)
