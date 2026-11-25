@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { STATUSES } from '../../lib/statuses.js';
 
-function dueDateInfo(dueDate) {
+function dueDateInfo(dueDate, completed) {
     if (!dueDate) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(`${dueDate}T00:00:00`);
     const days = Math.round((due - today) / 86400000);
-    const cls = days < 0 ? 'text-red-400' : days <= 3 ? 'text-amber-400' : 'text-slate-400';
+    // A completed card is no longer "late" — mute the red instead.
+    const cls = days < 0 ? (completed ? 'text-slate-500' : 'text-red-400') : days <= 3 ? 'text-amber-400' : 'text-slate-400';
     const label = new Date(`${dueDate}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     return { cls, text: `Due ${label}` };
 }
 
 export default function CardBody({ todo, tags, onClick, onDelete, onStatusChange, overlay, completed }) {
     const [menuOpen, setMenuOpen] = useState(false);
-    const due = dueDateInfo(todo.dueDate);
+    const due = dueDateInfo(todo.dueDate, completed);
 
     async function setStatus(status) {
         setMenuOpen(false);
