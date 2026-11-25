@@ -24,6 +24,7 @@ export default function Board({ user, onLogout, onOpenProfile }) {
     const [selectedTags, setSelectedTags] = useState([]);
     const [editing, setEditing] = useState(null);
     const [dragId, setDragId] = useState(null);
+    const [collapsed, setCollapsed] = useState({ planned: false, started: false, completed: false });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -158,6 +159,8 @@ export default function Board({ user, onLogout, onOpenProfile }) {
         load();
     }
 
+    const toggleColumn = (id) => setCollapsed((cur) => ({ ...cur, [id]: !cur[id] }));
+
     const handleStatusChange = (id, status) =>
         api.updateTodo(id, { status }).then(load).catch((e) => setError(e.message));
 
@@ -237,6 +240,8 @@ export default function Board({ user, onLogout, onOpenProfile }) {
                             onEdit={setEditing}
                             onDelete={handleDeleteTodo}
                             onStatusChange={handleStatusChange}
+                            collapsed={collapsed[s.id]}
+                            onToggleCollapsed={() => toggleColumn(s.id)}
                         />
                     ))}
                 </main>
