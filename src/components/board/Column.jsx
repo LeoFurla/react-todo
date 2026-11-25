@@ -20,15 +20,19 @@ function useIsMobile() {
 }
 
 export default function Column({ status, ids, todoMap, visible, tagList, onAdd, onEdit, onDelete, onStatusChange, collapsed, onToggleCollapsed }) {
-    const { setNodeRef, isOver } = useDroppable({ id: status.id });
     const shown = ids.filter((id) => visible(todoMap[id]));
     const isMobile = useIsMobile();
     const folded = isMobile && collapsed;
+    // While folded the card list (the normal droppable) is unmounted, so the
+    // header becomes the drop target instead — hovering a drag over it makes
+    // the board expand the column (see handleDragOver).
+    const { setNodeRef, isOver } = useDroppable({ id: folded ? `folded-${status.id}` : status.id });
 
     return (
         <section className="flex w-full flex-col rounded-xl border border-slate-800 bg-slate-900/60 md:w-80 md:shrink-0">
             <header
-                className={`flex items-center justify-between rounded-t-xl border-t-2 ${status.accent} px-4 py-3 ${folded ? 'rounded-b-xl' : ''}`}
+                ref={folded ? setNodeRef : undefined}
+                className={`flex items-center justify-between rounded-t-xl border-t-2 ${status.accent} px-4 py-3 transition-colors ${folded ? 'rounded-b-xl' : ''} ${folded && isOver ? 'bg-slate-800/50' : ''}`}
             >
                 <h2 className="font-semibold">{status.label}</h2>
                 <div className="flex items-center gap-2">

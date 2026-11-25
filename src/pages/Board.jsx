@@ -159,6 +159,17 @@ export default function Board({ user, onLogout, onOpenProfile }) {
     function handleDragOver(event) {
         const { active, over } = event;
         if (!over) return;
+        // A folded column exposes its header as a `folded-*` droppable:
+        // expand it so the real list mounts and the drop can land in it.
+        // The move is applied at once (into the column end) so that a release
+        // over the header — before the next collision pass re-targets the
+        // freshly mounted list — still persists the drop.
+        if (typeof over.id === 'string' && over.id.startsWith('folded-')) {
+            const id = over.id.slice('folded-'.length);
+            setCollapsed((cur) => (cur[id] ? { ...cur, [id]: false } : cur));
+            setOrder((prev) => applyMove(prev, active.id, id));
+            return;
+        }
         setOrder((prev) => applyMove(prev, active.id, over.id));
     }
 
