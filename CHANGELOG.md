@@ -4,6 +4,15 @@ All notable changes to react-todo are documented here.
 
 > Releases before 2.0.0 are not documented individually - the git history was squashed into an initial commit.
 
+## [3.1.0] - 2026-11-25
+
+### Added
+- Mobile-only column collapse: below the `md` (768 px) breakpoint each column header gets a fold button that hides the card list; the state persists per browser in `localStorage`
+- Dropping a card onto a collapsed column expands it mid-drag so the drop lands inside (the folded header acts as the drop target)
+
+### Changed
+- Completed cards no longer show the red overdue due-date color — the date is muted instead
+
 ## [3.0.0] - 2026-11-12
 
 Security and hardening release following the v2.2.0 project analysis. One breaking change: all existing sessions are invalidated — every user must log in once.
