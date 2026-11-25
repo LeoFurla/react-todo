@@ -28,7 +28,7 @@ export default function Column({ status, ids, todoMap, visible, tagList, onAdd, 
     return (
         <section className="flex w-full flex-col rounded-xl border border-slate-800 bg-slate-900/60 md:w-80 md:shrink-0">
             <header
-                className={`flex items-center justify-between border-t-2 ${status.accent} px-4 py-3 ${folded ? 'rounded-b-xl' : 'rounded-t-xl'}`}
+                className={`flex items-center justify-between rounded-t-xl border-t-2 ${status.accent} px-4 py-3 ${folded ? 'rounded-b-xl' : ''}`}
             >
                 <h2 className="font-semibold">{status.label}</h2>
                 <div className="flex items-center gap-2">
