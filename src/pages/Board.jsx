@@ -24,7 +24,26 @@ export default function Board({ user, onLogout, onOpenProfile }) {
     const [selectedTags, setSelectedTags] = useState([]);
     const [editing, setEditing] = useState(null);
     const [dragId, setDragId] = useState(null);
-    const [collapsed, setCollapsed] = useState({ planned: false, started: false, completed: false });
+    // Persisted per browser (not per user — it is a display preference).
+    const COLLAPSED_KEY = 'react-todo.collapsed';
+    const [collapsed, setCollapsed] = useState(() => {
+        const empty = { planned: false, started: false, completed: false };
+        try {
+            const saved = JSON.parse(localStorage.getItem(COLLAPSED_KEY));
+            return { planned: !!saved?.planned, started: !!saved?.started, completed: !!saved?.completed };
+        } catch {
+            return empty;
+        }
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsed));
+        } catch {
+            // storage unavailable (private mode quota, etc.) — state stays in memory
+        }
+    }, [collapsed]);
+
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
 
