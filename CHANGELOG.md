@@ -4,6 +4,11 @@ All notable changes to react-todo are documented here.
 
 > Releases before 2.0.0 are not documented individually - the git history was squashed into an initial commit.
 
+## [3.1.1] - 2026-11-27
+
+### Changed
+- Column headers no longer show the colored top accent border (Planned/Started/Completed); the unused `accent` field was removed from the status definitions
+
 ## [3.1.0] - 2026-11-25
 
 ### Added

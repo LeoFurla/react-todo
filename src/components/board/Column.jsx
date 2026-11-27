@@ -32,7 +32,7 @@ export default function Column({ status, ids, todoMap, visible, tagList, onAdd, 
         <section className="flex w-full flex-col rounded-xl border border-slate-800 bg-slate-900/60 md:w-80 md:shrink-0">
             <header
                 ref={folded ? setNodeRef : undefined}
-                className={`flex items-center justify-between rounded-t-xl border-t-2 ${status.accent} px-4 py-3 transition-colors ${folded ? 'rounded-b-xl' : ''} ${folded && isOver ? 'bg-slate-800/50' : ''}`}
+                className={`flex items-center justify-between rounded-t-xl px-4 py-3 transition-colors ${folded ? 'rounded-b-xl' : ''} ${folded && isOver ? 'bg-slate-800/50' : ''}`}
             >
                 <h2 className="font-semibold">{status.label}</h2>
                 <div className="flex items-center gap-2">
